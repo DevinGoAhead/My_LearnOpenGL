@@ -1,0 +1,3 @@
+D:/Xuyang Wei/OpenGL_VSCode/source/triangle/build/CMakeFiles/triangle.dir
+D:/Xuyang Wei/OpenGL_VSCode/source/triangle/build/CMakeFiles/edit_cache.dir
+D:/Xuyang Wei/OpenGL_VSCode/source/triangle/build/CMakeFiles/rebuild_cache.dir

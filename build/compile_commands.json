@@ -1,0 +1,8 @@
+[
+{
+  "directory": "D:/Xuyang Wei/OpenGL_VSCode/source/triangle/build",
+  "command": "D:/OtherProgram/mingw64/bin/g++.exe  @CMakeFiles/triangle.dir/includes_CXX.rsp -g -Wall -std=c++11 -o CMakeFiles/triangle.dir/triangle.cc.obj -c \"D:/Xuyang Wei/OpenGL_VSCode/source/triangle/triangle.cc\"",
+  "file": "D:/Xuyang Wei/OpenGL_VSCode/source/triangle/triangle.cc",
+  "output": "CMakeFiles/triangle.dir/triangle.cc.obj"
+}
+]
