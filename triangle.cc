@@ -1,8 +1,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <stdio.h>
+#include <windows.h>
+
+#include <cstdio>
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+
 
 // 错误回调函数
 static void error_callback(int error, const char *description)
@@ -54,22 +60,30 @@ void isLinkSuccess(GLuint program)
 	}
 }
 
+// v2 生成一个随机数种子
+GLfloat RandFrom0to1()
+	{
+		srand(time(NULL) | GetCurrentProcessId());//生成一个随机数种子
+		GLfloat time = glfwGetTime();
+		Sleep(100);//这里为了让下一个随机数种子有时间产生一定的变化
+		return (sin((int)time | rand()) / 2 + 0.5); // sin() / 2  [-0.5, +0.5] 
+	}
+
 // 顶点着色器源码
+// v2 不需要 顶点着色器传递给 片段着色器颜色属性
 const char *vertexShaderSource = R"(
     #version 330 core // 声明版本
     layout (location = 0) in vec3 position; // 输入变量：顶点坐标，索引设置为0
-	layout (location = 1) in vec4 myColor; // v2 需要将设置的颜色输入进来
-	out vec4 fragColor; // 输出变量，颜色，作为片段着色器的输入变量
     void main() {
         gl_Position = vec4(position, 1.0); //齐次坐标，openGL内建变量，表示点在裁剪空间的位置，本例给出NDC内坐标，避免复杂转换
-		fragColor = myColor; //颜色处理
     }
 )";
 
 // 片段着色器源码
+// v2 直接从 uniform 变量获取颜色
 const char *fragmentShaderSource = R"(
     #version 330 core
-	in vec4 fragColor; //输入变量：颜色，与顶点着色器中的 fragColor 对应，会自动传入进来
+	uniform vec4 fragColor; //uniform 变量：颜色
     out vec4 color; // 输出变量，作为下一阶段的输入变量
     void main() {
         color = fragColor; // 颜色处理
@@ -176,20 +190,20 @@ int main()
 	//v2 顶点数据中新增了顶点颜色
 	GLfloat vertics[] =
 		{
-			0.0f, 0.3f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // 0
-			-0.2f, 0.3f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // 1
-			-0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, // 2
+			0.0f, 0.3f, 0.0f, // 0
+			-0.2f, 0.3f, 0.0f, // 1
+			-0.2f, 0.0f, 0.0f, // 2
 
 			// 0.0f, 0.3f, 0.0f, // 0
-			0.2f, 0.3f, 0.0f, 1.0f, 0.6f, 0.1f, 0.8f, // 3
-			0.2f, 0.0f, 0.0f, 0.9f, 0.7f, 0.5f, 0.4f, // 4
+			0.2f, 0.3f, 0.0f, // 3
+			0.2f, 0.0f, 0.0f, // 4
 
-			0.0f, -0.3f, 0.0f, 0.7f, 0.5f, 0.3f, 0.3f, // 5
-			-0.2f, -0.3f, 0.0f, 0.5f, 0.3f, 0.1f, 0.7f, // 6
+			0.0f, -0.3f, 0.0f, // 5
+			-0.2f, -0.3f, 0.0f, // 6
 			//-0.2f, 0.0f,  0.0f, // 2
 
 			// 0.0f, -0.3f, 0.0f, // 5
-			0.2f, -0.3f, 0.0f, 1.0f, 1.0f, 1.0f, 0.5f // 7
+			0.2f, -0.3f, 0.0f, // 7
 			// 0.2f,  0.0f, 0.0f, // 4
 		};
 
@@ -222,11 +236,8 @@ int main()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indeies), indeies, GL_STATIC_DRAW); // 在GPU中分配内存，存储索引数据
 
 	//设置顶点属性指针,告知GPU如何解析顶点数据
-	// v2 由于顶点数据改变了，需要重新告知GPU 如何解析 顶点数据
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (const GLvoid *)0); // 如何解析位置坐标
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (const GLvoid *)0); // 如何解析位置坐标
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (const GLvoid *)(3 * sizeof(GLfloat))); // 如何解析颜色rgba
-	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(verticArray);// 将 verticArray 从 openGL 上下文解绑，之后的信息将不会记录
 	
@@ -234,6 +245,8 @@ int main()
 	glEnable(GL_BLEND);//启用颜色混合操作功能
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);//设置颜色混合模式
 
+	
+	
 	/*主循环*/
 	glfwSwapInterval(1); // 设置 渲染完成 1 帧，交换一次前后缓冲
 	while (!glfwWindowShouldClose(pWindow))
@@ -242,6 +255,11 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT); // 仅清除颜色缓冲区
 		
 		glUseProgram(shaderProgram);//激活着色程序
+		GLuint location = glGetUniformLocation(shaderProgram, "fragColor");//必须在激活程序之后，因为 fragColor 在程序 shaderProgram 中
+		
+		// 这里给一个动态变化的颜色
+		glUniform4f(location, RandFrom0to1(), RandFrom0to1(), RandFrom0to1(), RandFrom0to1());
+
 		glBindVertexArray(verticArray);//第二次绑定同一个 VAO 时，OpenGL 会使用这个 VAO 中记录的所有配置信息来进行绘制操作
 		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, (void*)0);
 		glfwSwapBuffers(pWindow);
