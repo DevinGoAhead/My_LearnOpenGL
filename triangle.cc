@@ -145,7 +145,7 @@ int main()
 
 	/*创建并编译片段着色器对象*/
 
-	// 创建 参数 GL_SHADER_TYPE == GL_FRAGMENT_SHADER 的着色器对象，即顶点着色器对象
+	// 创建 参数 GL_SHADER_TYPE == GL_FRAGMENT_SHADER 的着色器对象，即片段着色器对象
 	// fragmentShader 是着色器对象的 ID（引用）
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -198,7 +198,8 @@ int main()
 			0, 3, 4,
 			5, 6, 2,
 			5, 7, 4};
-
+	
+	/*配置顶点属性*/
 	// 创建VBO、EBO、VAO
 	GLuint verticBuffer;  // 用于存储VBO，如果是多个缓冲区对象，就创建一个数组
 	GLuint elementBuffer; // 用于存储EBO，如果是多个缓冲区对象，就创建一个数组
@@ -223,19 +224,20 @@ int main()
 	glEnableVertexAttribArray(0);
 
 	glBindVertexArray(verticArray);// 将 verticArray 从 openGL 上下文解绑，之后的信息将不会记录
-
+	
+	//使 透明值 生效
 	glEnable(GL_BLEND);//启用颜色混合操作功能
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);//设置颜色混合模式
 
 	/*主循环*/
-	glfwSwapInterval(1); // 渲染完成 1 帧，交换一次前后缓冲
+	glfwSwapInterval(1); // 设置 渲染完成 1 帧，交换一次前后缓冲
 	while (!glfwWindowShouldClose(pWindow))
 	{
 		glClearColor(0.3f, 0.5f, 0.7f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT); // 仅清除颜色缓冲区
 		
 		glUseProgram(shaderProgram);//激活着色程序
-		glBindVertexArray(verticArray);//将 verticArray 绑定到openGL 上下文，并使用其中记录的信息
+		glBindVertexArray(verticArray);//第二次绑定同一个 VAO 时，OpenGL 会使用这个 VAO 中记录的所有配置信息来进行绘制操作
 		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, (void*)0);
 		glfwSwapBuffers(pWindow);
 		glfwPollEvents();
@@ -244,8 +246,9 @@ int main()
 	/*资源清理*/
 	glDeleteBuffers(1, &verticBuffer);
 	glDeleteBuffers(1, &elementBuffer);
+	glBindVertexArray(0);
 	glDeleteVertexArrays(1, &verticArray);
-	
+
 	// glfwTerminate();//终止GLFW。放在这里会出问题，应为 glfwDestroyWindow 还会使用 GLFW 库
 	glfwDestroyWindow(pWindow); // 销毁窗口
 	glfwTerminate();			// 终止GLFW
