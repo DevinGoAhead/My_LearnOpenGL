@@ -58,10 +58,11 @@ void isLinkSuccess(GLuint program)
 const char *vertexShaderSource = R"(
     #version 330 core // 声明版本
     layout (location = 0) in vec3 position; // 输入变量：顶点坐标，索引设置为0
+	layout (location = 1) in vec4 myColor; // v2 需要将设置的颜色输入进来
 	out vec4 fragColor; // 输出变量，颜色，作为片段着色器的输入变量
     void main() {
         gl_Position = vec4(position, 1.0); //齐次坐标，openGL内建变量，表示点在裁剪空间的位置，本例给出NDC内坐标，避免复杂转换
-		fragColor = vec4(0.7f, 0.5f, 0.3f, 0.4f); //颜色处理
+		fragColor = myColor; //颜色处理
     }
 )";
 
@@ -165,29 +166,30 @@ int main()
 	glad_glLinkProgram(shaderProgram);			   // 链接
 	isLinkSuccess(shaderProgram);				   // 检查链接是否成功
 
-	// 创建顶点数据,4个三角形
+	// v1 创建顶点数据,4个三角形
 	//          ------
 	//          | /\ |
 	//          |/  \|
 	//          |\  /|
 	//          | \/ |
 	//          ------
+	//v2 顶点数据中新增了顶点颜色
 	GLfloat vertics[] =
 		{
-			0.0f, 0.3f, 0.0f,  // 0
-			-0.2f, 0.3f, 0.0f, // 1
-			-0.2f, 0.0f, 0.0f, // 2
+			0.0f, 0.3f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // 0
+			-0.2f, 0.3f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // 1
+			-0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, // 2
 
 			// 0.0f, 0.3f, 0.0f, // 0
-			0.2f, 0.3f, 0.0f, // 3
-			0.2f, 0.0f, 0.0f, // 4
+			0.2f, 0.3f, 0.0f, 1.0f, 0.6f, 0.1f, 0.8f, // 3
+			0.2f, 0.0f, 0.0f, 0.9f, 0.7f, 0.5f, 0.4f, // 4
 
-			0.0f, -0.3f, 0.0f,	// 5
-			-0.2f, -0.3f, 0.0f, // 6
+			0.0f, -0.3f, 0.0f, 0.7f, 0.5f, 0.3f, 0.3f, // 5
+			-0.2f, -0.3f, 0.0f, 0.5f, 0.3f, 0.1f, 0.7f, // 6
 			//-0.2f, 0.0f,  0.0f, // 2
 
 			// 0.0f, -0.3f, 0.0f, // 5
-			0.2f, -0.3f, 0.0f, // 7
+			0.2f, -0.3f, 0.0f, 1.0f, 1.0f, 1.0f, 0.5f // 7
 			// 0.2f,  0.0f, 0.0f, // 4
 		};
 
@@ -220,8 +222,11 @@ int main()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indeies), indeies, GL_STATIC_DRAW); // 在GPU中分配内存，存储索引数据
 
 	//设置顶点属性指针,告知GPU如何解析顶点数据
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	// v2 由于顶点数据改变了，需要重新告知GPU 如何解析 顶点数据
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (const GLvoid *)0); // 如何解析位置坐标
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (const GLvoid *)(3 * sizeof(GLfloat))); // 如何解析颜色rgba
+	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(verticArray);// 将 verticArray 从 openGL 上下文解绑，之后的信息将不会记录
 	
